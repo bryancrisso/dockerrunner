@@ -8,9 +8,7 @@ except socket.error as err:
 
 port = 6666
 
-host = socket.gethostname()
-
-s.connect((host, port))
+s.connect(("192.168.1.209", port))
 
 print("Successfully connected to host")
 
