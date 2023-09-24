@@ -14,24 +14,51 @@ def connect(host, port):
         return False
     
     print("Session validated")
-    if waitForString("sending script"):
-        fileData = s.recv(1024).decode()
+
+    fileData = receiveFile()
+    if fileData[0]:
+        print("received tester")
         s.send("received\n".encode("utf-8"))
-        file = open("script.py", "w")
-        file.write(fileData)
-        file.close()
-        output = run()
-        sendOutput(output)
+        f = open(fileData[0], "w")
+        f.write(fileData[1])
+        f.close()
+
+        fileData = receiveFile()
+        if fileData[0]:
+            print("received script")
+            s.send("received\n".encode("utf-8"))
+            f = open(fileData[0], "w")
+            f.write(fileData[1])
+            f.close()
+
+            output = run()
+            print([output])
+            sendOutput(output)
+
     s.close()
         
 def run():
-    out = subprocess.run(["python3", "script.py"], stdout=subprocess.PIPE).stdout
+    out = subprocess.run(["python3", "tester.py"], stdout=subprocess.PIPE).stdout
     return(str(out, encoding="utf-8"))
 
 def sendOutput(output):
     s.send("completed\n".encode("utf-8"))
     s.send((output+"\n").encode("utf-8"))
     s.send("output transfer complete\n".encode("utf-8"))
+
+def receiveFile():
+    message = s.recv(1024).decode().strip()
+    fileName = ""
+    if message[:7] == "sending":
+        fileName = message[8:]
+    else:
+        return ""
+    
+    s.send("ready\n".encode("utf-8"))
+
+    fileData = s.recv(1024).decode()
+
+    return (fileName, fileData)
 
 def waitForString(expected):
     result = False

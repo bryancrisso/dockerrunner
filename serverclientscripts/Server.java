@@ -1,6 +1,7 @@
 package serverclientscripts;
 
 import java.net.*;
+import java.nio.file.*;
 import java.io.*;
 
 class Server
@@ -11,6 +12,7 @@ class Server
     private BufferedReader in;
     private int code = 1234;
     private String scriptPath = "./serverclientscripts/scripts/script.py";
+    private String testerPath = "./serverclientscripts/scripts/tester.py";
 
     public static void main(String args[]) throws IOException
     {
@@ -59,7 +61,10 @@ class Server
         }
         System.out.println("Valid verification code");
         out.println("session valid");
-        handleFileSend();
+
+        handleFileSend(testerPath);
+        handleFileSend(scriptPath);
+
         String output = waitForOutput();
         System.out.println(output);
 
@@ -109,10 +114,16 @@ class Server
         return result;
     }
 
-    private void handleFileSend()
+    private void handleFileSend(String path)
     {
-        String script = readFileContents(scriptPath);
-        out.println("sending script");
+        String script = readFileContents(path);
+
+        Path p = Paths.get(path);
+
+        out.println("sending " + p.getFileName());
+
+        waitForString("ready");
+
         out.println(script);
         if(!waitForString("received"))
         {
