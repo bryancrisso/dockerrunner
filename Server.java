@@ -1,4 +1,4 @@
-package serverclientscripts;
+
 
 import java.net.*;
 import java.nio.file.*;
@@ -11,8 +11,8 @@ class Server
     private PrintWriter out;
     private BufferedReader in;
     private int code = 1234;
-    private String scriptPath = "./serverclientscripts/scripts/script.py";
-    private String testerPath = "./serverclientscripts/scripts/tester.py";
+    private String scriptPath = "./scripts/script.py";
+    private String testerPath = "./scripts/tester.py";
 
     public static void main(String args[]) throws IOException
     {
@@ -30,6 +30,10 @@ class Server
 
     public void start(int port) throws IOException
     {
+        Shell.command(
+            "docker run -d -e HOST_IP=\"192.168.1.209\" -e VERIF_CODE=\"1234\" --name dr-1 docker-runner",
+            System.getProperty("user.dir"));
+
         serverSocket = new ServerSocket(port);
         System.out.println("Waiting for connection");
 
@@ -68,6 +72,9 @@ class Server
         String output = waitForOutput();
         System.out.println(output);
 
+
+        Shell.command("docker stop dr-1", System.getProperty("user.dir"));
+        Shell.command("docker rm dr-1", System.getProperty("user.dir"));
         stop();
     }
 

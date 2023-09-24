@@ -9,6 +9,6 @@ RUN apt update
 RUN apt install python3 -y
 WORKDIR /app
 
-COPY main.py ./
+COPY client.py ./
 
-CMD python3 main.py ${VERIF_CODE} ${HOST_IP}
+CMD python3 client.py ${VERIF_CODE} ${HOST_IP}
