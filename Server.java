@@ -1,5 +1,3 @@
-
-
 import java.net.*;
 import java.nio.file.*;
 import java.io.*;
@@ -7,19 +5,25 @@ import java.io.*;
 class Server
 {
     private ServerSocket serverSocket;
+    
+    private String hostIP = "10.249.62.183";
+    
+    //move to thread
     private Socket clientSocket;
     private PrintWriter out;
     private BufferedReader in;
-    private int code = 1234;
+    private String code = "1234";
     private String scriptPath = "./scripts/script.py";
     private String testerPath = "./scripts/tester.py";
+    private String testDataPath = "./scripts/data.txt";
 
     public static void main(String args[]) throws IOException
     {
         Server server = new Server();
         try
         {
-            server.start(6666);
+            server.startServer(6666);
+            server.start(new Message("1234", "", "", ""));
         }
         catch(IOException e)
         {
@@ -28,21 +32,23 @@ class Server
         }
     }
 
-    public void start(int port) throws IOException
+    public void startServer(int port) throws IOException
     {
-        Shell.command(
-            "docker run -d -e HOST_IP=\"192.168.1.209\" -e VERIF_CODE=\"1234\" --name dr-1 docker-runner",
+        serverSocket = new ServerSocket(port);
+    }
+
+    public void start(Message m) throws IOException
+    {
+        Shell.command("docker run -d -e HOST_IP=\""+hostIP+"\" -e VERIF_CODE=\""+ m.getID() +"\" --name " + m.getID() + " docker-runner",
             System.getProperty("user.dir"));
 
-        serverSocket = new ServerSocket(port);
-        System.out.println("Waiting for connection");
-
-        int recvdCode = 0;
+        String recvdCode = "";
 
         while (recvdCode != code)
         {
             //wait for client connection
             clientSocket = serverSocket.accept();
+            System.out.println("Waiting for connection");
             System.out.println("Client " + clientSocket.getRemoteSocketAddress() + " connected");
 
             //establish input and output streams
@@ -51,7 +57,7 @@ class Server
 
             //receive client code
             System.out.println("Waiting for client verification code");
-            recvdCode = Integer.parseInt(in.readLine());
+            recvdCode = in.readLine();
             System.out.println("Received verification code " + recvdCode);
 
             //handle if received code is invalid
@@ -68,10 +74,10 @@ class Server
 
         handleFileSend(testerPath);
         handleFileSend(scriptPath);
+        handleFileSend(testDataPath);
 
         String output = waitForOutput();
         System.out.println(output);
-
 
         Shell.command("docker stop dr-1", System.getProperty("user.dir"));
         Shell.command("docker rm dr-1", System.getProperty("user.dir"));
@@ -107,7 +113,6 @@ class Server
         try
         {
             String actual = in.readLine();
-            System.out.println(actual);
             if (actual.equals(expected))
             {
                 result = true;

@@ -15,25 +15,18 @@ def connect(host, port):
     
     print("Session validated")
 
-    fileData = receiveFile()
-    if fileData[0]:
-        print("received tester")
-        s.send("received\n".encode("utf-8"))
-        f = open(fileData[0], "w")
-        f.write(fileData[1])
-        f.close()
+    fileReceiveSuccess = False
 
-        fileData = receiveFile()
-        if fileData[0]:
-            print("received script")
-            s.send("received\n".encode("utf-8"))
-            f = open(fileData[0], "w")
-            f.write(fileData[1])
-            f.close()
+    if confirmAndWriteFile(receiveFileData()): #receive tester file
+        if confirmAndWriteFile(receiveFileData()): #receive script file
+            if confirmAndWriteFile(receiveFileData()): #receive test data
+                fileReceiveSuccess = True
+                output = run()
+                print([output])
+                sendOutput(output)
 
-            output = run()
-            print([output])
-            sendOutput(output)
+    if not fileReceiveSuccess:
+        print("There was an issue when receiving the file")
 
     s.close()
         
@@ -46,7 +39,7 @@ def sendOutput(output):
     s.send((output+"\n").encode("utf-8"))
     s.send("output transfer complete\n".encode("utf-8"))
 
-def receiveFile():
+def receiveFileData():
     message = s.recv(1024).decode().strip()
     fileName = ""
     if message[:7] == "sending":
@@ -59,6 +52,17 @@ def receiveFile():
     fileData = s.recv(1024).decode()
 
     return (fileName, fileData)
+
+def confirmAndWriteFile(fileData):
+    if fileData[0]:
+        print("received " + fileData[0])
+        s.send("received\n".encode("utf-8"))
+        f = open(fileData[0], "w")
+        f.write(fileData[1])
+        f.close()
+        return True
+    else:
+        return False
 
 def waitForString(expected):
     result = False
