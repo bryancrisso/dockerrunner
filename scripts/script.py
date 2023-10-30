@@ -2,5 +2,5 @@
 import time
 def run():
     nums = [i for i in range(3)]
-    time.sleep(1)
+    time.sleep(3)
     return nums

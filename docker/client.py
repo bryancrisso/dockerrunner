@@ -1,6 +1,9 @@
 import socket, sys, subprocess
 
 def connect(host, port):
+
+    success = False
+
     #connecting to da server
     s.connect((host, port))
     print("Successfully connected to host")
@@ -24,11 +27,13 @@ def connect(host, port):
                 output = run()
                 print([output])
                 sendOutput(output)
+                success = True
 
     if not fileReceiveSuccess:
         print("There was an issue when receiving the file")
 
     s.close()
+    return success
         
 def run():
     out = subprocess.run(["python3", "tester.py"], stdout=subprocess.PIPE).stdout
@@ -77,4 +82,11 @@ try:
 except socket.error as err:
     print("Socket creation failed with error %s" %(err))
 
-connect(sys.argv[2], 6666)
+status = False
+while not status:
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        print("Socket successfully created")
+    except socket.error as err:
+        print("Socket creation failed with error %s" %(err))
+    status = connect(sys.argv[2], 6666)
